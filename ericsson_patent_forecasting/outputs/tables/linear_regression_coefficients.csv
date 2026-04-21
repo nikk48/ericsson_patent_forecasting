@@ -1,0 +1,15 @@
+feature,coefficient
+intercept,-6.212332114143862
+kw_iot_share_lag_1,14471.90060652872
+kw_cloud_edge_share_lag_1,1437.8492240007597
+kw_ai_ml_share_lag_1,1232.2789492035324
+kw_security_share_lag_1,275.2211092891942
+kw_network_share_lag_1,15.072609358185446
+trend,3.0934942231998446
+lag_1,1.5822440351422458
+lag_2,-0.577056504950916
+growth_rate_lag_1,-22.83378990383593
+kw_data_share_lag_1,-210.23075694451325
+kw_energy_share_lag_1,-242.15183906187832
+kw_antenna_share_lag_1,-1432.4299326329594
+kw_5g_share_lag_1,-747610.3495135636

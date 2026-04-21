@@ -1,0 +1,5 @@
+model,split,MAE,RMSE,MAPE
+Random Forest,validation,815.9022,869.4373,55.7687
+Random Forest,test,151.0119,184.5533,11.5661
+Tuned XGBoost,validation,771.1108,829.8961,52.3096
+Tuned XGBoost,test,214.1551,263.6618,16.4616

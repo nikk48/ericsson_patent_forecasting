@@ -1,0 +1,13 @@
+scheme,model,split,MAE,RMSE,MAPE,n_clusters
+no_segmentation,Random Forest,test,151.0119,184.5533,11.5661,1.0
+text_embedding_kmeans,Random Forest,test,192.9927,238.366,14.8282,2.0
+non_text_kmeans,Random Forest,test,210.6625,259.1068,16.1709,2.0
+text_embedding_kmeans,Linear Regression,test,251.032,292.0208,18.547,2.0
+non_text_kmeans,Linear Regression,test,254.8999,298.3865,18.8044,2.0
+no_segmentation,Linear Regression,test,10907.2143,15008.8144,824.8834,1.0
+non_text_kmeans,Linear Regression,validation,200.6947,249.6118,12.9588,2.0
+text_embedding_kmeans,Linear Regression,validation,206.2508,251.3237,13.2415,2.0
+no_segmentation,Linear Regression,validation,208.8141,291.2856,13.1657,1.0
+non_text_kmeans,Random Forest,validation,705.0211,770.3729,47.4447,2.0
+text_embedding_kmeans,Random Forest,validation,732.8781,787.798,49.8029,2.0
+no_segmentation,Random Forest,validation,815.9022,869.4373,55.7687,1.0

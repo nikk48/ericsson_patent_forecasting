@@ -1,0 +1,7 @@
+model,split,MAE,RMSE,MAPE
+Linear Regression,validation,208.8141,291.2856,13.1657
+Linear Regression,test,10907.2143,15008.8144,824.8834
+Random Forest,validation,815.9022,869.4373,55.7687
+Random Forest,test,151.0119,184.5533,11.5661
+XGBoost,validation,866.71,916.9517,59.5232
+XGBoost,test,250.4698,299.4513,19.1086
