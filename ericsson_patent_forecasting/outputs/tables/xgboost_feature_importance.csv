@@ -1,0 +1,14 @@
+feature,importance
+lag_1,0.46264187
+lag_2,0.31881368
+trend,0.17893034
+kw_security_share_lag_1,0.020015636
+growth_rate_lag_1,0.0102896765
+kw_ai_ml_share_lag_1,0.0037567604
+kw_antenna_share_lag_1,0.0031069906
+kw_iot_share_lag_1,0.0012193909
+kw_energy_share_lag_1,0.00051953766
+kw_cloud_edge_share_lag_1,0.00030997387
+kw_data_share_lag_1,0.00015232575
+kw_network_share_lag_1,0.00014342915
+kw_5g_share_lag_1,0.00010044536

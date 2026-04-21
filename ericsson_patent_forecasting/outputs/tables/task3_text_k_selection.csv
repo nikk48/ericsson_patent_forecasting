@@ -1,0 +1,6 @@
+k,silhouette_score,selected_k,svd_components,svd_explained_variance
+2,0.184,2,50,0.1866
+6,0.1325,2,50,0.1866
+5,0.1243,2,50,0.1866
+4,0.1164,2,50,0.1866
+3,0.1073,2,50,0.1866

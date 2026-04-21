@@ -1,0 +1,25 @@
+scheme,model,split,MAE,RMSE,MAPE,n_clusters,cluster
+text_embedding_kmeans,Linear Regression,validation,206.2508,251.3237,13.2415,2.0,
+text_embedding_kmeans,Linear Regression,test,251.032,292.0208,18.547,2.0,
+text_embedding_kmeans,Random Forest,validation,732.8781,787.798,49.8029,2.0,
+text_embedding_kmeans,Random Forest,test,192.9927,238.366,14.8282,2.0,
+text_embedding_kmeans,Linear Regression,validation,178.7333,230.7459,12.3842,,cluster_0
+text_embedding_kmeans,Linear Regression,test,232.5719,270.4639,18.2632,,cluster_0
+text_embedding_kmeans,Random Forest,validation,656.8738,710.2059,49.3404,,cluster_0
+text_embedding_kmeans,Random Forest,test,160.8296,203.6718,13.2144,,cluster_0
+text_embedding_kmeans,Linear Regression,validation,27.5175,31.0973,19.678,,cluster_1
+text_embedding_kmeans,Linear Regression,test,28.5376,30.6673,35.1015,,cluster_1
+text_embedding_kmeans,Random Forest,validation,76.0042,79.2172,53.5505,,cluster_1
+text_embedding_kmeans,Random Forest,test,36.7504,40.1273,45.5348,,cluster_1
+non_text_kmeans,Linear Regression,validation,200.6947,249.6118,12.9588,2.0,
+non_text_kmeans,Linear Regression,test,254.8999,298.3865,18.8044,2.0,
+non_text_kmeans,Random Forest,validation,705.0211,770.3729,47.4447,2.0,
+non_text_kmeans,Random Forest,test,210.6625,259.1068,16.1709,2.0,
+non_text_kmeans,Linear Regression,validation,207.8182,254.8858,13.5238,,cluster_0
+non_text_kmeans,Linear Regression,test,252.3829,295.203,18.6071,,cluster_0
+non_text_kmeans,Random Forest,validation,722.9035,786.8961,48.9047,,cluster_0
+non_text_kmeans,Random Forest,test,207.3256,255.9663,15.9365,,cluster_0
+non_text_kmeans,Linear Regression,validation,11.8363,13.1483,287.7,,cluster_1
+non_text_kmeans,Linear Regression,test,6.1106,6.1804,497.0786,,cluster_1
+non_text_kmeans,Random Forest,validation,17.8824,19.0458,432.3036,,cluster_1
+non_text_kmeans,Random Forest,test,3.3369,3.6096,257.4162,,cluster_1
