@@ -1,33 +1,20 @@
 """
 forecasting_models.py
 
-This file contains the modelling logic for Task 2.
-
-Task 2 asks us to:
-- forecast total annual patent counts
-- use one interpretable model
-- use one complex machine learning model
-- compare them with standard error metrics
-
-In this file:
-- Linear Regression is used as the interpretable model
-- Random Forest is used as one complex machine learning model
-- XGBoost is used as another complex machine learning model
-
-Why include both Random Forest and XGBoost?
-- Random Forest is robust, simple, and a strong nonlinear benchmark
-- XGBoost often achieves higher accuracy because it learns sequentially by correcting earlier errors
-- comparing both helps us justify model choice using evidence rather than assumption
+Modelling utilities for Task 2 and Task 3.
 """
 
 from __future__ import annotations
 
-from typing import Dict, List, Tuple
+from dataclasses import dataclass
+import json
+from typing import Dict, List, Optional, Tuple
+
 import numpy as np
 import pandas as pd
 
-from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 try:
@@ -36,6 +23,19 @@ try:
 except Exception as exc:  # pragma: no cover
     XGBRegressor = None
     _XGBOOST_IMPORT_ERROR = str(exc)
+
+
+@dataclass
+class NaiveLastValueRegressor:
+    """Forecast each year using the previous year's patent count."""
+
+    lag_feature_name: str = "lag_1"
+
+    def fit(self, X_train: pd.DataFrame, y_train: pd.Series) -> "NaiveLastValueRegressor":
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        return X[self.lag_feature_name].to_numpy(dtype=float)
 
 
 def is_xgboost_available() -> bool:
@@ -55,24 +55,12 @@ def get_xgboost_unavailable_reason() -> str:
 def prepare_model_data(
     annual_df: pd.DataFrame,
     feature_columns: List[str],
-    target_column: str = "total_patents"
+    target_column: str = "total_patents",
 ) -> pd.DataFrame:
-    """
-    Keep only the modelling columns and remove rows with missing values.
-
-    Why missing values appear:
-    Lag variables and growth rate cannot be calculated for the first one or two years.
-    For example:
-    - lag_1 is missing for the very first year
-    - lag_2 is missing for the first two years
-
-    Why this step matters:
-    Most machine learning models cannot train on rows with missing input values.
-    """
+    """Keep only modelling columns and drop rows with missing inputs."""
     modelling_df = annual_df[["year", target_column] + feature_columns].copy()
     modelling_df = modelling_df.dropna().reset_index(drop=True)
     return modelling_df
-
 
 
 def split_time_series_data(
@@ -81,22 +69,12 @@ def split_time_series_data(
     val_end_year: int,
     target_column: str,
     feature_columns: List[str],
+    val_start_year: Optional[int] = None,
 ) -> Dict[str, pd.DataFrame]:
-    """
-    Split the data into train, validation, and test sets using time order.
-
-    Why this matters:
-    In forecasting, we must respect chronology.
-    We should learn from the past and predict the future.
-    We must never randomly mix future years into the training data.
-
-    Structure:
-    - training set: used to fit the model
-    - validation set: used to compare models
-    - test set: used for final unbiased evaluation
-    """
+    """Split data into chronological train, validation, and test sets."""
+    validation_start = train_end_year + 1 if val_start_year is None else val_start_year
     train_df = df[df["year"] <= train_end_year].copy()
-    val_df = df[(df["year"] > train_end_year) & (df["year"] <= val_end_year)].copy()
+    val_df = df[(df["year"] >= validation_start) & (df["year"] <= val_end_year)].copy()
     test_df = df[df["year"] > val_end_year].copy()
     return {
         "X_train": train_df[feature_columns],
@@ -111,113 +89,133 @@ def split_time_series_data(
     }
 
 
-
 def train_linear_regression(X_train: pd.DataFrame, y_train: pd.Series) -> LinearRegression:
-    """
-    Train the interpretable forecasting model: Linear Regression.
-
-    Why this model is used:
-    Linear regression is simple, transparent, and easy to explain.
-    It helps us understand how each feature affects patent counts.
-    """
+    """Train the interpretable linear regression baseline."""
     model = LinearRegression()
     model.fit(X_train, y_train)
     return model
 
 
-
-def train_random_forest(X_train: pd.DataFrame, y_train: pd.Series, random_state: int = 42) -> RandomForestRegressor:
-    """
-    Train the complex ML forecasting model: Random Forest.
-
-    Why this model is used:
-    Random Forest can capture:
-    - nonlinear relationships
-    - interactions between variables
-    - more complex patterns than linear regression
-
-    Why it is suitable here:
-    It is powerful but still relatively stable and easy to use on a medium-sized dataset.
-    """
-    model = RandomForestRegressor(
-        n_estimators=300,
-        max_depth=5,
-        min_samples_split=2,
-        min_samples_leaf=1,
-        random_state=random_state,
-    )
+def train_naive_last_value(X_train: pd.DataFrame, y_train: pd.Series) -> NaiveLastValueRegressor:
+    """Create the naive last-value benchmark."""
+    model = NaiveLastValueRegressor()
     model.fit(X_train, y_train)
     return model
 
 
+def train_random_forest(
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
+    random_state: int = 42,
+    hyperparameters: Optional[Dict] = None,
+) -> RandomForestRegressor:
+    """Train the complex ML Random Forest model."""
+    params = {
+        "n_estimators": 300,
+        "max_depth": 5,
+        "min_samples_split": 2,
+        "min_samples_leaf": 1,
+        "random_state": random_state,
+    }
+    if hyperparameters:
+        params.update(hyperparameters)
+    model = RandomForestRegressor(**params)
+    model.fit(X_train, y_train)
+    return model
 
-def train_xgboost(X_train: pd.DataFrame, y_train: pd.Series, random_state: int = 42):
-    """
-    Train the second complex ML forecasting model: XGBoost.
 
-    Why this model is used:
-    XGBoost builds trees sequentially, where each new tree focuses on correcting
-    the mistakes made by earlier trees. This often leads to very strong predictive performance.
-
-    Why it is useful in this coursework:
-    Task 1 showed that patent activity is nonlinear and volatile.
-    XGBoost is often strong in exactly this kind of setting.
-    """
+def train_xgboost(
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
+    random_state: int = 42,
+    hyperparameters: Optional[Dict] = None,
+):
+    """Train the complex ML XGBoost model."""
     if XGBRegressor is None:
         raise ImportError(
             "XGBoost is unavailable in this environment. "
             f"Reason: {get_xgboost_unavailable_reason()}"
         )
 
-    model = XGBRegressor(
-        n_estimators=200,
-        learning_rate=0.05,
-        max_depth=4,
-        subsample=0.9,
-        colsample_bytree=0.9,
-        objective="reg:squarederror",
-        random_state=random_state,
-    )
+    params = {
+        "n_estimators": 200,
+        "learning_rate": 0.05,
+        "max_depth": 4,
+        "subsample": 0.9,
+        "colsample_bytree": 0.9,
+        "objective": "reg:squarederror",
+        "random_state": random_state,
+    }
+    if hyperparameters:
+        params.update(hyperparameters)
+    model = XGBRegressor(**params)
     model.fit(X_train, y_train)
     return model
 
 
+def train_model_by_name(
+    model_name: str,
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
+    random_state: int = 42,
+    hyperparameters: Optional[Dict] = None,
+):
+    """Train one supported model from its display name."""
+    if model_name == "Naive Last Value":
+        return train_naive_last_value(X_train=X_train, y_train=y_train)
+    if model_name == "Linear Regression":
+        return train_linear_regression(X_train=X_train, y_train=y_train)
+    if model_name == "Random Forest":
+        return train_random_forest(
+            X_train=X_train,
+            y_train=y_train,
+            random_state=random_state,
+            hyperparameters=hyperparameters,
+        )
+    if model_name == "XGBoost":
+        return train_xgboost(
+            X_train=X_train,
+            y_train=y_train,
+            random_state=random_state,
+            hyperparameters=hyperparameters,
+        )
+    raise ValueError(f"Unsupported model name: {model_name}")
+
+
+def clip_predictions_non_negative(predictions: np.ndarray) -> np.ndarray:
+    """Keep forecasts consistent with non-negative patent counts."""
+    return np.clip(np.asarray(predictions, dtype=float), 0.0, None)
+
 
 def calculate_forecast_metrics(y_true: pd.Series, y_pred: np.ndarray) -> Dict[str, float]:
-    """
-    Calculate forecasting error metrics.
-
-    Metrics used:
-    - MAE: average absolute error
-    - RMSE: gives more penalty to large mistakes
-    - MAPE: percentage error
-    """
+    """Calculate MAE, RMSE, and MAPE for one forecast set."""
     mae = mean_absolute_error(y_true, y_pred)
     rmse = np.sqrt(mean_squared_error(y_true, y_pred))
     y_true_safe = np.where(y_true == 0, np.nan, y_true)
     mape = np.nanmean(np.abs((y_true - y_pred) / y_true_safe)) * 100
-    return {"MAE": round(float(mae), 4), "RMSE": round(float(rmse), 4), "MAPE": round(float(mape), 4)}
+    return {
+        "MAE": round(float(mae), 4),
+        "RMSE": round(float(rmse), 4),
+        "MAPE": round(float(mape), 4),
+    }
 
 
-
-def evaluate_model_on_split(model, X: pd.DataFrame, y: pd.Series) -> Tuple[np.ndarray, Dict[str, float]]:
-    """
-    Use a trained model to make predictions and evaluate them.
-    """
+def evaluate_model_on_split(
+    model,
+    X: pd.DataFrame,
+    y: pd.Series,
+    clip_non_negative: bool = False,
+) -> Tuple[np.ndarray, Dict[str, float]]:
+    """Predict on one split and return predictions plus metrics."""
     predictions = model.predict(X)
+    if clip_non_negative:
+        predictions = clip_predictions_non_negative(predictions)
     metrics = calculate_forecast_metrics(y, predictions)
     return predictions, metrics
 
 
-
 def build_metrics_table(results: Dict[str, Dict[str, Dict[str, float]]]) -> pd.DataFrame:
-    """
-    Convert model evaluation results into a neat comparison table.
-
-    Why this matters:
-    This allows direct comparison of Linear Regression, Random Forest, and XGBoost
-    across validation and test sets.
-    """
+    """Convert nested evaluation results into a comparison table."""
     rows = []
     for model_name, split_results in results.items():
         for split_name, metrics in split_results.items():
@@ -227,37 +225,156 @@ def build_metrics_table(results: Dict[str, Dict[str, Dict[str, float]]]) -> pd.D
     return pd.DataFrame(rows)
 
 
-
 def get_linear_regression_coefficients(model: LinearRegression, feature_columns: List[str]) -> pd.DataFrame:
-    """
-    Extract coefficients from the linear regression model.
-    """
-    coef_df = pd.DataFrame({"feature": feature_columns, "coefficient": model.coef_}).sort_values(by="coefficient", ascending=False).reset_index(drop=True)
+    """Extract linear regression coefficients."""
+    coef_df = (
+        pd.DataFrame({"feature": feature_columns, "coefficient": model.coef_})
+        .sort_values(by="coefficient", ascending=False)
+        .reset_index(drop=True)
+    )
     intercept_df = pd.DataFrame({"feature": ["intercept"], "coefficient": [model.intercept_]})
     return pd.concat([intercept_df, coef_df], ignore_index=True)
 
 
-
 def get_random_forest_feature_importance(model: RandomForestRegressor, feature_columns: List[str]) -> pd.DataFrame:
-    """
-    Extract feature importance values from the Random Forest model.
-    """
-    importance_df = pd.DataFrame({"feature": feature_columns, "importance": model.feature_importances_}).sort_values(by="importance", ascending=False).reset_index(drop=True)
-    return importance_df
-
+    """Extract Random Forest feature importances."""
+    return (
+        pd.DataFrame({"feature": feature_columns, "importance": model.feature_importances_})
+        .sort_values(by="importance", ascending=False)
+        .reset_index(drop=True)
+    )
 
 
 def get_xgboost_feature_importance(model, feature_columns: List[str]) -> pd.DataFrame:
-    """
-    Extract feature importance values from the XGBoost model.
+    """Extract XGBoost feature importances."""
+    return (
+        pd.DataFrame({"feature": feature_columns, "importance": model.feature_importances_})
+        .sort_values(by="importance", ascending=False)
+        .reset_index(drop=True)
+    )
 
-    Why this matters:
-    XGBoost is complex, so feature importance helps us understand
-    which variables contributed most to the predictions.
-    """
-    importance_df = pd.DataFrame({"feature": feature_columns, "importance": model.feature_importances_}).sort_values(by="importance", ascending=False).reset_index(drop=True)
-    return importance_df
 
+def evaluate_model_with_rolling_origin(
+    model_name: str,
+    modelling_df: pd.DataFrame,
+    feature_columns: List[str],
+    target_column: str,
+    windows: List[Dict[str, int]],
+    random_state: int = 42,
+    hyperparameters: Optional[Dict] = None,
+    clip_non_negative: bool = False,
+) -> pd.DataFrame:
+    """Evaluate one model over several rolling-origin validation windows."""
+    rows = []
+    for window_index, window in enumerate(windows, start=1):
+        splits = split_time_series_data(
+            df=modelling_df,
+            train_end_year=window["train_end_year"],
+            val_end_year=window["val_end_year"],
+            val_start_year=window["val_start_year"],
+            target_column=target_column,
+            feature_columns=feature_columns,
+        )
+        if splits["X_train"].empty or splits["X_val"].empty:
+            continue
+
+        model = train_model_by_name(
+            model_name=model_name,
+            X_train=splits["X_train"],
+            y_train=splits["y_train"],
+            random_state=random_state,
+            hyperparameters=hyperparameters,
+        )
+        _, metrics = evaluate_model_on_split(
+            model=model,
+            X=splits["X_val"],
+            y=splits["y_val"],
+            clip_non_negative=clip_non_negative,
+        )
+        rows.append(
+            {
+                "model": model_name,
+                "window_id": window_index,
+                "train_start_year": int(splits["train_df"]["year"].min()),
+                "train_end_year": int(window["train_end_year"]),
+                "validation_start_year": int(window["val_start_year"]),
+                "validation_end_year": int(window["val_end_year"]),
+                "n_train_years": int(len(splits["train_df"])),
+                "n_validation_years": int(len(splits["val_df"])),
+                "hyperparameters": json.dumps(hyperparameters or {}, sort_keys=True),
+                **metrics,
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def summarize_rolling_validation(rolling_df: pd.DataFrame) -> pd.DataFrame:
+    """Average rolling-origin validation metrics for each model/parameter set."""
+    if rolling_df.empty:
+        return pd.DataFrame()
+
+    summary = (
+        rolling_df.groupby(["model", "hyperparameters"], as_index=False)[["MAE", "RMSE", "MAPE"]]
+        .mean()
+        .rename(
+            columns={
+                "MAE": "average_MAE",
+                "RMSE": "average_RMSE",
+                "MAPE": "average_MAPE",
+            }
+        )
+        .sort_values(by=["average_RMSE", "average_MAE", "model"], ascending=[True, True, True])
+        .reset_index(drop=True)
+    )
+    return summary
+
+
+def tune_model_hyperparameters(
+    model_name: str,
+    modelling_df: pd.DataFrame,
+    feature_columns: List[str],
+    target_column: str,
+    windows: List[Dict[str, int]],
+    parameter_grid: List[Dict],
+    random_state: int = 42,
+    clip_non_negative: bool = False,
+) -> pd.DataFrame:
+    """Evaluate a small hyperparameter grid using rolling-origin validation."""
+    tuning_rows = []
+    for params in parameter_grid:
+        rolling_df = evaluate_model_with_rolling_origin(
+            model_name=model_name,
+            modelling_df=modelling_df,
+            feature_columns=feature_columns,
+            target_column=target_column,
+            windows=windows,
+            random_state=random_state,
+            hyperparameters=params,
+            clip_non_negative=clip_non_negative,
+        )
+        if rolling_df.empty:
+            continue
+
+        summary = summarize_rolling_validation(rolling_df)
+        summary_row = summary.iloc[0].to_dict()
+        summary_row["hyperparameters_dict"] = json.dumps(params, sort_keys=True)
+        tuning_rows.append(summary_row)
+
+    if not tuning_rows:
+        return pd.DataFrame()
+
+    tuning_df = pd.DataFrame(tuning_rows).sort_values(
+        by=["average_RMSE", "average_MAE"],
+        ascending=[True, True],
+    ).reset_index(drop=True)
+    return tuning_df
+
+
+def get_best_hyperparameters(tuning_df: pd.DataFrame) -> Dict:
+    """Parse the best hyperparameter row from a tuning table."""
+    if tuning_df.empty:
+        return {}
+    return json.loads(tuning_df.iloc[0]["hyperparameters_dict"])
 
 
 def forecast_future_years_recursive(
@@ -265,20 +382,9 @@ def forecast_future_years_recursive(
     annual_df: pd.DataFrame,
     feature_columns: List[str],
     future_horizon: int,
+    clip_non_negative: bool = False,
 ) -> pd.DataFrame:
-    """
-    Forecast future annual patent counts one year at a time.
-
-    Why this is called recursive forecasting:
-    Once we move into the future, actual patent counts are unknown.
-    So after predicting the next year, we use that predicted value
-    as an input for forecasting the following year.
-
-    Simple assumption used here:
-    Technology shares are carried forward from the latest known year.
-    Because the model uses lagged shares, this keeps future forecasting
-    aligned with the information pattern used during training.
-    """
+    """Forecast future annual patent counts one year at a time."""
     working_df = annual_df.copy().sort_values("year").reset_index(drop=True)
 
     last_year = int(working_df["year"].max())
@@ -331,6 +437,8 @@ def forecast_future_years_recursive(
 
         X_future = pd.DataFrame([{col: row.get(col, np.nan) for col in feature_columns}])
         predicted_total = float(model.predict(X_future)[0])
+        if clip_non_negative:
+            predicted_total = float(clip_predictions_non_negative(np.array([predicted_total]))[0])
 
         row["total_patents"] = predicted_total
         forecasts.append(row)

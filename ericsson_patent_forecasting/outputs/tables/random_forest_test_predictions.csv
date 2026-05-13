@@ -1,10 +1,10 @@
 year,total_patents,predicted_total_patents,model
-2017,1599,1558.63,Random Forest
-2018,1376,1562.395,Random Forest
-2019,1632,1554.655,Random Forest
-2020,1391,1533.6733333333334,Random Forest
-2021,1404,1513.4033333333334,Random Forest
-2022,1418,1550.5933333333332,Random Forest
-2023,1208,1544.49,Random Forest
-2024,1549,1532.63,Random Forest
-2025,1177,1494.4666666666667,Random Forest
+2017,1599,1553.772,Random Forest
+2018,1376,1554.121,Random Forest
+2019,1632,1563.343,Random Forest
+2020,1391,1534.406,Random Forest
+2021,1404,1508.912,Random Forest
+2022,1418,1546.996,Random Forest
+2023,1208,1546.978,Random Forest
+2024,1549,1522.9,Random Forest
+2025,1177,1495.564,Random Forest

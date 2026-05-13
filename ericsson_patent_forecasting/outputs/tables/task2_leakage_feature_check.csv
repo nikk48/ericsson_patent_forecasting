@@ -1,0 +1,14 @@
+feature,is_leakage_safe,reason
+trend,True,Calendar trend is known before the forecast year.
+lag_1,True,Lagged totals depend only on historical patent counts.
+lag_2,True,Lagged totals depend only on historical patent counts.
+growth_rate_lag_1,True,Lagged engineered feature uses information available at year t-1.
+kw_5g_share_lag_1,True,Lagged engineered feature uses information available at year t-1.
+kw_ai_ml_share_lag_1,True,Lagged engineered feature uses information available at year t-1.
+kw_cloud_edge_share_lag_1,True,Lagged engineered feature uses information available at year t-1.
+kw_security_share_lag_1,True,Lagged engineered feature uses information available at year t-1.
+kw_iot_share_lag_1,True,Lagged engineered feature uses information available at year t-1.
+kw_network_share_lag_1,True,Lagged engineered feature uses information available at year t-1.
+kw_energy_share_lag_1,True,Lagged engineered feature uses information available at year t-1.
+kw_antenna_share_lag_1,True,Lagged engineered feature uses information available at year t-1.
+kw_data_share_lag_1,True,Lagged engineered feature uses information available at year t-1.
