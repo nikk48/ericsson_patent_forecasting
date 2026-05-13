@@ -2,16 +2,6 @@
 segmentation_forecasting.py
 
 Utilities for Task 3 segmentation-based forecasting.
-
-This module supports two segmentation schemes:
-- text embeddings from patent titles
-- non-text patent-level feature clustering
-
-It also provides helpers to:
-- justify cluster count using silhouette scores
-- interpret clusters
-- convert patent-level clusters into yearly cluster counts
-- forecast yearly cluster counts and aggregate them back to total patents
 """
 
 from __future__ import annotations
@@ -34,8 +24,7 @@ from src.forecasting_models import (
     evaluate_model_on_split,
     prepare_model_data,
     split_time_series_data,
-    train_linear_regression,
-    train_random_forest,
+    train_model_by_name,
 )
 
 
@@ -45,13 +34,7 @@ MAX_ABS_NUMERIC_VALUE = 1e6
 
 @contextmanager
 def _suppress_known_sklearn_runtime_warnings():
-    """
-    Suppress noisy numeric RuntimeWarnings from sklearn linear algebra kernels.
-
-    These warnings can appear on some Mac/Python/NumPy builds even when inputs
-    are finite and outputs are valid. We contain suppression to clustering/SVD
-    calls so the rest of the pipeline keeps normal warning behavior.
-    """
+    """Suppress noisy numerical warnings around linear algebra kernels."""
     with warnings.catch_warnings():
         warnings.filterwarnings(
             "ignore",
@@ -77,9 +60,7 @@ def _suppress_known_sklearn_runtime_warnings():
 
 
 def _sanitize_numeric_matrix(X: np.ndarray) -> np.ndarray:
-    """
-    Ensure matrices used in clustering are finite and bounded.
-    """
+    """Ensure matrices used in clustering are finite and bounded."""
     matrix = np.asarray(X, dtype=np.float64)
     matrix = np.nan_to_num(
         matrix,
@@ -97,12 +78,7 @@ def select_optimal_kmeans(
     random_state: int = RANDOM_STATE,
     sample_size: int = 5000,
 ) -> Tuple[int, pd.DataFrame]:
-    """
-    Select the number of clusters using average silhouette score.
-
-    For efficiency, silhouette scoring is computed on a sample when the dataset
-    is large, while the final KMeans model is always fit on the full matrix.
-    """
+    """Select the number of clusters using average silhouette score."""
     X = _sanitize_numeric_matrix(X)
 
     if len(X) > sample_size:
@@ -131,58 +107,133 @@ def select_optimal_kmeans(
 
 
 def build_text_segmentation(
-    df: pd.DataFrame,
+    train_df: pd.DataFrame,
+    full_df: Optional[pd.DataFrame] = None,
     random_state: int = RANDOM_STATE,
-) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    k_values: Optional[Iterable[int]] = None,
+    text_grid: Optional[List[Dict[str, int]]] = None,
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    Build the text-based segmentation scheme using TF-IDF + SVD + KMeans.
+    Fit the text segmentation on the training window only, then assign all rows.
     """
-    working_df = df.copy()
-    text_series = working_df["patent_title"].fillna("").astype(str)
+    training_df = train_df.copy()
+    working_df = train_df.copy() if full_df is None else full_df.copy()
+    k_values = list(range(2, 7)) if k_values is None else list(k_values)
+    text_grid = text_grid or [
+        {"min_df": 5, "max_features": 3000, "svd_components": 50},
+    ]
 
-    vectorizer = TfidfVectorizer(
-        stop_words="english",
-        ngram_range=(1, 2),
-        min_df=5,
-        max_features=3000,
-    )
-    tfidf_matrix = vectorizer.fit_transform(text_series)
+    best_artifacts = None
+    sensitivity_rows = []
 
-    n_components = max(2, min(50, tfidf_matrix.shape[1] - 1))
-    svd = TruncatedSVD(n_components=n_components, random_state=random_state)
-    with _suppress_known_sklearn_runtime_warnings():
-        reduced_embeddings = svd.fit_transform(tfidf_matrix)
-    reduced_embeddings = _sanitize_numeric_matrix(reduced_embeddings)
+    for option in text_grid:
+        vectorizer = TfidfVectorizer(
+            stop_words="english",
+            ngram_range=(1, 2),
+            min_df=option["min_df"],
+            max_features=option["max_features"],
+        )
+        train_tfidf = vectorizer.fit_transform(training_df["patent_title"].fillna("").astype(str))
+        if train_tfidf.shape[1] < 2:
+            continue
 
-    best_k, selection_df = select_optimal_kmeans(
-        reduced_embeddings,
+        n_components = max(2, min(option["svd_components"], train_tfidf.shape[1] - 1))
+        svd = TruncatedSVD(n_components=n_components, random_state=random_state)
+        with _suppress_known_sklearn_runtime_warnings():
+            train_reduced = svd.fit_transform(train_tfidf)
+        train_reduced = _sanitize_numeric_matrix(train_reduced)
+
+        best_k, selection_df = select_optimal_kmeans(
+            train_reduced,
+            k_values=k_values,
+            random_state=random_state,
+        )
+        best_score = float(selection_df.iloc[0]["silhouette_score"])
+        explained_variance = round(float(svd.explained_variance_ratio_.sum()), 4)
+        sensitivity_rows.append(
+            {
+                "min_df": int(option["min_df"]),
+                "max_features": int(option["max_features"]),
+                "svd_components": int(n_components),
+                "selected_k": int(best_k),
+                "best_silhouette_score": round(best_score, 4),
+                "svd_explained_variance": explained_variance,
+            }
+        )
+
+        if best_artifacts is None or best_score > best_artifacts["best_score"]:
+            best_artifacts = {
+                "vectorizer": vectorizer,
+                "svd": svd,
+                "train_tfidf": train_tfidf,
+                "train_reduced": train_reduced,
+                "selection_df": selection_df,
+                "best_k": best_k,
+                "best_score": best_score,
+                "selected_option": {
+                    "min_df": int(option["min_df"]),
+                    "max_features": int(option["max_features"]),
+                    "svd_components": int(n_components),
+                    "svd_explained_variance": explained_variance,
+                },
+            }
+
+    if best_artifacts is None:
+        raise ValueError("Unable to fit text segmentation because TF-IDF features were empty.")
+
+    final_model = KMeans(
+        n_clusters=best_artifacts["best_k"],
         random_state=random_state,
+        n_init=20,
     )
-    final_model = KMeans(n_clusters=best_k, random_state=random_state, n_init=20)
     with _suppress_known_sklearn_runtime_warnings():
-        working_df["text_cluster"] = final_model.fit_predict(reduced_embeddings)
+        final_model.fit(best_artifacts["train_reduced"])
+
+    full_tfidf = best_artifacts["vectorizer"].transform(working_df["patent_title"].fillna("").astype(str))
+    with _suppress_known_sklearn_runtime_warnings():
+        full_reduced = best_artifacts["svd"].transform(full_tfidf)
+    full_reduced = _sanitize_numeric_matrix(full_reduced)
+    working_df["text_cluster"] = final_model.predict(full_reduced)
 
     profile_df = _create_text_cluster_profiles(
         df=working_df,
         cluster_column="text_cluster",
-        tfidf_matrix=tfidf_matrix,
-        feature_names=vectorizer.get_feature_names_out().tolist(),
+        tfidf_matrix=full_tfidf,
+        feature_names=best_artifacts["vectorizer"].get_feature_names_out().tolist(),
     )
-    selection_df["selected_k"] = best_k
-    selection_df["svd_components"] = n_components
-    selection_df["svd_explained_variance"] = round(float(svd.explained_variance_ratio_.sum()), 4)
-    return working_df, selection_df, profile_df
+
+    selection_df = best_artifacts["selection_df"].copy()
+    selection_df["selected_k"] = best_artifacts["best_k"]
+    selection_df["min_df"] = best_artifacts["selected_option"]["min_df"]
+    selection_df["max_features"] = best_artifacts["selected_option"]["max_features"]
+    selection_df["svd_components"] = best_artifacts["selected_option"]["svd_components"]
+    selection_df["svd_explained_variance"] = best_artifacts["selected_option"]["svd_explained_variance"]
+    selection_df["fit_end_year"] = int(training_df["year"].max())
+
+    sensitivity_df = (
+        pd.DataFrame(sensitivity_rows)
+        .sort_values(
+            by=["best_silhouette_score", "svd_explained_variance"],
+            ascending=[False, False],
+        )
+        .reset_index(drop=True)
+    )
+    return working_df, selection_df, profile_df, sensitivity_df
 
 
 def build_non_text_segmentation(
-    df: pd.DataFrame,
+    train_df: pd.DataFrame,
+    full_df: Optional[pd.DataFrame] = None,
     random_state: int = RANDOM_STATE,
+    k_values: Optional[Iterable[int]] = None,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    Build the non-text segmentation scheme using title stats, keyword flags,
-    and patent-type indicators.
+    Fit the non-text segmentation on the training window only, then assign all rows.
     """
-    working_df = df.copy()
+    training_df = train_df.copy()
+    working_df = train_df.copy() if full_df is None else full_df.copy()
+    k_values = list(range(2, 7)) if k_values is None else list(k_values)
+
     feature_columns = [
         "title_len_chars",
         "title_len_words",
@@ -202,25 +253,31 @@ def build_non_text_segmentation(
         "is_design",
         "is_other_type",
     ]
-    X = working_df[feature_columns].copy().fillna(0)
-
     scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-    X_scaled = _sanitize_numeric_matrix(X_scaled)
+    train_X = training_df[feature_columns].copy().fillna(0)
+    full_X = working_df[feature_columns].copy().fillna(0)
+
+    train_X_scaled = scaler.fit_transform(train_X)
+    full_X_scaled = scaler.transform(full_X)
+    train_X_scaled = _sanitize_numeric_matrix(train_X_scaled)
+    full_X_scaled = _sanitize_numeric_matrix(full_X_scaled)
 
     best_k, selection_df = select_optimal_kmeans(
-        X_scaled,
+        train_X_scaled,
+        k_values=k_values,
         random_state=random_state,
     )
     final_model = KMeans(n_clusters=best_k, random_state=random_state, n_init=20)
     with _suppress_known_sklearn_runtime_warnings():
-        working_df["non_text_cluster"] = final_model.fit_predict(X_scaled)
+        final_model.fit(train_X_scaled)
+    working_df["non_text_cluster"] = final_model.predict(full_X_scaled)
 
     profile_df = _create_non_text_cluster_profiles(
         df=working_df,
         cluster_column="non_text_cluster",
     )
     selection_df["selected_k"] = best_k
+    selection_df["fit_end_year"] = int(training_df["year"].max())
     return working_df, selection_df, profile_df
 
 
@@ -256,6 +313,21 @@ def create_yearly_cluster_counts(
     return counts
 
 
+def create_cluster_balance_table(df: pd.DataFrame, scheme_name: str, cluster_column: str) -> pd.DataFrame:
+    """Summarize cluster sizes and shares for report-ready diagnostics."""
+    cluster_counts = (
+        df[cluster_column]
+        .value_counts(dropna=False)
+        .sort_index()
+        .rename_axis("cluster")
+        .reset_index(name="n_patents")
+    )
+    cluster_counts["scheme"] = scheme_name
+    cluster_counts["cluster"] = cluster_counts["cluster"].apply(lambda value: f"cluster_{int(value)}")
+    cluster_counts["portfolio_share"] = (cluster_counts["n_patents"] / len(df)).round(4)
+    return cluster_counts[["scheme", "cluster", "n_patents", "portfolio_share"]]
+
+
 def create_cluster_modelling_dataset(
     annual_cluster_counts: pd.DataFrame,
     target_column: str,
@@ -277,20 +349,12 @@ def get_cluster_forecasting_feature_columns() -> List[str]:
     return ["trend", "lag_1", "lag_2", "growth_rate_lag_1"]
 
 
-def train_cluster_model(model_name: str, X_train: pd.DataFrame, y_train: pd.Series):
-    """Train one of the baseline models used in segmented forecasting."""
-    if model_name == "Linear Regression":
-        return train_linear_regression(X_train=X_train, y_train=y_train)
-    if model_name == "Random Forest":
-        return train_random_forest(X_train=X_train, y_train=y_train, random_state=RANDOM_STATE)
-    raise ValueError(f"Unsupported cluster forecasting model: {model_name}")
-
-
 def forecast_cluster_future_years_recursive(
     model,
     annual_df: pd.DataFrame,
     target_column: str,
     future_horizon: int,
+    clip_non_negative: bool = False,
 ) -> pd.DataFrame:
     """Forecast future cluster counts using recursive lag updates."""
     feature_columns = get_cluster_forecasting_feature_columns()
@@ -318,7 +382,8 @@ def forecast_cluster_future_years_recursive(
         }
         X_future = pd.DataFrame([{col: row.get(col, np.nan) for col in feature_columns}])
         predicted_value = float(model.predict(X_future)[0])
-        predicted_value = max(0.0, predicted_value)
+        if clip_non_negative:
+            predicted_value = max(0.0, predicted_value)
 
         row[target_column] = predicted_value
         forecasts.append(row)
@@ -335,6 +400,9 @@ def run_segmented_forecast_for_scheme(
     train_end_year: int,
     val_end_year: int,
     future_horizon: int,
+    clip_non_negative: bool = False,
+    random_state: int = RANDOM_STATE,
+    model_hyperparameters_by_name: Optional[Dict[str, Dict]] = None,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Forecast cluster-level yearly counts, aggregate them, and return metrics,
@@ -342,6 +410,7 @@ def run_segmented_forecast_for_scheme(
     """
     cluster_columns = [col for col in annual_cluster_counts.columns if col != "year"]
     feature_columns = get_cluster_forecasting_feature_columns()
+    model_hyperparameters_by_name = model_hyperparameters_by_name or {}
 
     cluster_metric_rows = []
     aggregate_prediction_rows = []
@@ -365,7 +434,12 @@ def run_segmented_forecast_for_scheme(
             ),
             "future": pd.DataFrame(
                 {
-                    "year": list(range(int(annual_cluster_counts["year"].max()) + 1, int(annual_cluster_counts["year"].max()) + future_horizon + 1)),
+                    "year": list(
+                        range(
+                            int(annual_cluster_counts["year"].max()) + 1,
+                            int(annual_cluster_counts["year"].max()) + future_horizon + 1,
+                        )
+                    ),
                     "predicted_total_patents": np.zeros(future_horizon),
                 }
             ),
@@ -390,10 +464,20 @@ def run_segmented_forecast_for_scheme(
         train_val_df = modelling_df[modelling_df["year"] <= val_end_year].copy()
 
         for model_name in model_names:
-            validation_model = train_cluster_model(model_name, splits["X_train"], splits["y_train"])
-            val_pred, val_metrics = evaluate_model_on_split(validation_model, splits["X_val"], splits["y_val"])
-            val_pred = np.clip(val_pred, 0, None)
-            val_metrics = calculate_forecast_metrics(splits["y_val"], val_pred)
+            hyperparameters = model_hyperparameters_by_name.get(model_name)
+            validation_model = train_model_by_name(
+                model_name=model_name,
+                X_train=splits["X_train"],
+                y_train=splits["y_train"],
+                random_state=random_state,
+                hyperparameters=hyperparameters,
+            )
+            val_pred, val_metrics = evaluate_model_on_split(
+                validation_model,
+                splits["X_val"],
+                splits["y_val"],
+                clip_non_negative=clip_non_negative,
+            )
             cluster_metric_rows.append(
                 {
                     "scheme": scheme_name,
@@ -405,14 +489,19 @@ def run_segmented_forecast_for_scheme(
             )
             aggregate_predictions[model_name]["validation"]["predicted_total_patents"] += val_pred
 
-            test_model = train_cluster_model(
-                model_name,
-                train_val_df[feature_columns],
-                train_val_df[cluster_column],
+            test_model = train_model_by_name(
+                model_name=model_name,
+                X_train=train_val_df[feature_columns],
+                y_train=train_val_df[cluster_column],
+                random_state=random_state,
+                hyperparameters=hyperparameters,
             )
-            test_pred, test_metrics = evaluate_model_on_split(test_model, splits["X_test"], splits["y_test"])
-            test_pred = np.clip(test_pred, 0, None)
-            test_metrics = calculate_forecast_metrics(splits["y_test"], test_pred)
+            test_pred, test_metrics = evaluate_model_on_split(
+                test_model,
+                splits["X_test"],
+                splits["y_test"],
+                clip_non_negative=clip_non_negative,
+            )
             cluster_metric_rows.append(
                 {
                     "scheme": scheme_name,
@@ -424,16 +513,19 @@ def run_segmented_forecast_for_scheme(
             )
             aggregate_predictions[model_name]["test"]["predicted_total_patents"] += test_pred
 
-            future_model = train_cluster_model(
-                model_name,
-                modelling_df[feature_columns],
-                modelling_df[cluster_column],
+            future_model = train_model_by_name(
+                model_name=model_name,
+                X_train=modelling_df[feature_columns],
+                y_train=modelling_df[cluster_column],
+                random_state=random_state,
+                hyperparameters=hyperparameters,
             )
             future_forecasts = forecast_cluster_future_years_recursive(
                 model=future_model,
                 annual_df=cluster_annual_df,
                 target_column=cluster_column,
                 future_horizon=future_horizon,
+                clip_non_negative=clip_non_negative,
             )
             aggregate_predictions[model_name]["future"]["predicted_total_patents"] += future_forecasts[cluster_column].values
 

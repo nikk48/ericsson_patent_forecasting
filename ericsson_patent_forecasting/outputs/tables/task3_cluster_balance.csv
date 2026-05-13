@@ -1,0 +1,9 @@
+scheme,cluster,n_patents,portfolio_share
+text_embedding_kmeans,cluster_0,4561,0.1514
+text_embedding_kmeans,cluster_1,127,0.0042
+text_embedding_kmeans,cluster_2,2848,0.0946
+text_embedding_kmeans,cluster_3,18198,0.6042
+text_embedding_kmeans,cluster_4,2317,0.0769
+text_embedding_kmeans,cluster_5,2067,0.0686
+non_text_kmeans,cluster_0,29694,0.9859
+non_text_kmeans,cluster_1,424,0.0141

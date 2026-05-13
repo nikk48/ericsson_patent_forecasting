@@ -317,3 +317,67 @@ def get_forecasting_feature_columns(df: pd.DataFrame) -> List[str]:
     ]
 
     return [col for col in preferred_features if col in df.columns]
+
+
+def build_feature_ablation_sets(df: pd.DataFrame) -> List[dict]:
+    """Create progressively richer feature sets for Task 2 ablation tests."""
+    candidate_sets = [
+        {
+            "feature_set": "trend_only",
+            "description": "Trend only",
+            "features": ["trend"],
+        },
+        {
+            "feature_set": "trend_plus_lags",
+            "description": "Trend plus lag_1 and lag_2",
+            "features": ["trend", "lag_1", "lag_2"],
+        },
+        {
+            "feature_set": "trend_lags_growth",
+            "description": "Trend plus lag features and lagged growth",
+            "features": ["trend", "lag_1", "lag_2", "growth_rate_lag_1"],
+        },
+        {
+            "feature_set": "full_feature_set",
+            "description": "Trend, lags, lagged growth, and lagged keyword shares",
+            "features": get_forecasting_feature_columns(df),
+        },
+    ]
+
+    cleaned_sets = []
+    for feature_set in candidate_sets:
+        existing_features = [feature for feature in feature_set["features"] if feature in df.columns]
+        cleaned_sets.append(
+            {
+                "feature_set": feature_set["feature_set"],
+                "description": feature_set["description"],
+                "features": existing_features,
+            }
+        )
+    return cleaned_sets
+
+
+def create_forecasting_leakage_check_table(feature_columns: List[str]) -> pd.DataFrame:
+    """Document why each forecasting feature is safe or unsafe for real forecasting."""
+    rows = []
+    for feature in feature_columns:
+        is_safe = feature.startswith("lag_") or feature.endswith("_lag_1") or feature == "trend"
+        rows.append(
+            {
+                "feature": feature,
+                "is_leakage_safe": bool(is_safe),
+                "reason": _get_leakage_reason(feature),
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def _get_leakage_reason(feature_name: str) -> str:
+    """Explain why a feature is safe or unsafe for one-step-ahead forecasting."""
+    if feature_name == "trend":
+        return "Calendar trend is known before the forecast year."
+    if feature_name.startswith("lag_"):
+        return "Lagged totals depend only on historical patent counts."
+    if feature_name.endswith("_lag_1"):
+        return "Lagged engineered feature uses information available at year t-1."
+    return "Current-year feature would risk using information unavailable at forecast time."

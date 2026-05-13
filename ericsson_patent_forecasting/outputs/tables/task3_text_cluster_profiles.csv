@@ -1,3 +1,7 @@
 cluster,n_patents,portfolio_share,avg_year,avg_title_len_words,dominant_keyword,dominant_patent_type,top_terms
-0,27511,0.9134,2013.39,8.68,kw_network,is_utility,"method, network, communication, methods, device, wireless, radio, mobile"
-1,2607,0.0866,2011.53,10.27,kw_network,is_utility,"apparatus, method apparatus, method, apparatus method, communication, network, wireless, signal"
+0,4561,0.1514,2012.87,10.1,kw_network,is_utility,"network, method, arrangement, mobile, node, method arrangement, communications network, communications"
+1,127,0.0042,2007.77,4.48,kw_network,is_design,"mobile phone, phone, mobile, antenna, method, accessory, media, band"
+2,2848,0.0946,2014.66,10.42,kw_network,is_utility,"communication, wireless communication, wireless, communication network, network, method, methods, node"
+3,18198,0.6042,2013.38,8.02,kw_network,is_utility,"methods, method, control, transmission, data, radio, based, systems"
+4,2317,0.0769,2011.4,10.21,kw_network,is_utility,"method apparatus, apparatus, method, network, apparatus method, communication, signal, data"
+5,2067,0.0686,2013.13,9.6,kw_network,is_utility,"device, method device, method, wireless, network, device method, node, communication"

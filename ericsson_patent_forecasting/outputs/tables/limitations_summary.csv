@@ -1,0 +1,7 @@
+theme,evidence,implication
+sample_size,50 annual observations available for forecasting.,Limited annual history constrains the reliability of flexible models and multi-step forecasts.
+recursive_forecasting,Future horizon fixed at 5 years with recursive lag updates.,Forecast errors can compound as each future step depends on earlier predictions.
+future_covariate_assumption,Lagged keyword-share features are carried forward from the most recent observed year.,Future forecasts may miss shifts in Ericsson's technology mix if keyword shares change materially.
+text_cluster_separation,Best text-cluster silhouette score = 0.2067.,Weak separation suggests title-only text clusters may be informative for interpretation but noisy for forecasting.
+cluster_imbalance,non_text_kmeans smallest cluster cluster_1 share=0.0141; text_embedding_kmeans smallest cluster cluster_1 share=0.0042,"Small clusters create sparse annual series, which can reduce segmented forecast stability."
+omitted_business_drivers,"No external R&D, market, or regulatory variables are included.",Forecasts rely entirely on internal patent history and title-derived signals.

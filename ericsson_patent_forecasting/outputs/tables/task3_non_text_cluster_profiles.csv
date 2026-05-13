@@ -1,3 +1,3 @@
 cluster,n_patents,portfolio_share,avg_year,avg_title_len_words,avg_keyword_score,dominant_keyword,dominant_patent_type
-0,29742,0.9875,2013.39,8.89,0.6,kw_network,is_utility
-1,376,0.0125,2000.91,2.99,0.2261,kw_network,is_design
+0,29694,0.9859,2013.39,8.89,0.6,kw_network,is_utility
+1,424,0.0141,2002.57,3.66,0.2689,kw_network,is_design

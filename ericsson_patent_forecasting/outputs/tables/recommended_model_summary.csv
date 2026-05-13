@@ -1,0 +1,3 @@
+summary_type,model,selection_basis,selection_metrics,selected_hyperparameters,non_negative_constraint_applied
+selected_for_future_forecast,Naive Last Value,lowest average rolling-origin validation RMSE,"average_RMSE=153.38343333333333, average_MAE=129.5889, average_MAPE=16.1452",{},True
+best_holdout_test_model,XGBoost,lowest fixed-window holdout test RMSE,"RMSE=163.0107, MAE=144.2825, MAPE=10.7553","{'learning_rate': 0.01, 'max_depth': 2, 'n_estimators': 300}",True

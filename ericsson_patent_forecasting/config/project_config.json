@@ -1,0 +1,52 @@
+{
+  "train_end_year": 2010,
+  "val_end_year": 2016,
+  "future_horizon": 5,
+  "random_state": 42,
+  "enforce_non_negative_forecasts": true,
+  "rolling_validation_windows": [
+    {
+      "train_end_year": 2000,
+      "val_start_year": 2001,
+      "val_end_year": 2005
+    },
+    {
+      "train_end_year": 2005,
+      "val_start_year": 2006,
+      "val_end_year": 2010
+    },
+    {
+      "train_end_year": 2010,
+      "val_start_year": 2011,
+      "val_end_year": 2016
+    }
+  ],
+  "random_forest_grid": {
+    "n_estimators": [100, 300, 500],
+    "max_depth": [3, 5, 8],
+    "min_samples_leaf": [1, 2, 4]
+  },
+  "xgboost_grid": {
+    "learning_rate": [0.01, 0.05, 0.1],
+    "max_depth": [2, 3, 4],
+    "n_estimators": [100, 300, 500]
+  },
+  "text_segmentation_grid": [
+    {
+      "min_df": 3,
+      "max_features": 1000,
+      "svd_components": 25
+    },
+    {
+      "min_df": 5,
+      "max_features": 3000,
+      "svd_components": 50
+    },
+    {
+      "min_df": 10,
+      "max_features": 5000,
+      "svd_components": 100
+    }
+  ],
+  "task3_candidate_k_values": [2, 3, 4, 5, 6]
+}
