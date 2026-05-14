@@ -1,9 +1,13 @@
 model,split,MAE,RMSE,MAPE
+Naive Last Value,training,57.7576,97.5068,25.8555
 Naive Last Value,validation,197.1667,213.5427,14.3267
 Naive Last Value,test,197.3333,231.8314,14.3072
+Linear Regression,training,44.7554,59.1957,36.3958
 Linear Regression,validation,208.8141,291.2856,13.1657
 Linear Regression,test,998.3289,1125.2223,72.7782
+Random Forest,training,26.4719,39.9215,16.6366
 Random Forest,validation,807.9238,863.4854,55.1125
 Random Forest,test,150.3291,183.7173,11.519
+XGBoost,training,26.7656,34.8321,41.7874
 XGBoost,validation,852.9516,903.7453,58.5156
 XGBoost,test,144.2825,163.0107,10.7553

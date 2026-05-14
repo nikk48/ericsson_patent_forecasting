@@ -293,6 +293,7 @@ def main() -> None:
     X_train_val = train_val_df[feature_columns]
     y_train_val = train_val_df[TARGET_COLUMN]
 
+    training_metrics_by_model = {}
     validation_metrics_by_model = {}
     test_metrics_by_model = {}
     test_predictions_by_model = {}
@@ -305,6 +306,12 @@ def main() -> None:
             y_train=splits["y_train"],
             random_state=RANDOM_STATE,
             hyperparameters=model_hyperparameters_by_name.get(model_name),
+        )
+        _, training_metrics_by_model[model_name] = evaluate_model_on_split(
+            validation_model,
+            splits["X_train"],
+            splits["y_train"],
+            clip_non_negative=CLIP_NON_NEGATIVE,
         )
         _, validation_metrics_by_model[model_name] = evaluate_model_on_split(
             validation_model,
@@ -331,6 +338,7 @@ def main() -> None:
 
     results = {
         model_name: {
+            "training": training_metrics_by_model[model_name],
             "validation": validation_metrics_by_model[model_name],
             "test": test_metrics_by_model[model_name],
         }
