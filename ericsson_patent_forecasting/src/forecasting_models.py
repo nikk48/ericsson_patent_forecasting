@@ -15,7 +15,7 @@ import pandas as pd
 
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_absolute_error, mean_squared_error
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 try:
     from xgboost import XGBRegressor
@@ -188,15 +188,22 @@ def clip_predictions_non_negative(predictions: np.ndarray) -> np.ndarray:
 
 
 def calculate_forecast_metrics(y_true: pd.Series, y_pred: np.ndarray) -> Dict[str, float]:
-    """Calculate MAE, RMSE, and MAPE for one forecast set."""
+    """Calculate MAE, RMSE, MAPE, and R-squared for one forecast set."""
     mae = mean_absolute_error(y_true, y_pred)
     rmse = np.sqrt(mean_squared_error(y_true, y_pred))
     y_true_safe = np.where(y_true == 0, np.nan, y_true)
     mape = np.nanmean(np.abs((y_true - y_pred) / y_true_safe)) * 100
+    r2 = np.nan
+    if len(y_true) >= 2:
+        try:
+            r2 = r2_score(y_true, y_pred)
+        except ValueError:
+            r2 = np.nan
     return {
         "MAE": round(float(mae), 4),
         "RMSE": round(float(rmse), 4),
         "MAPE": round(float(mape), 4),
+        "R2": round(float(r2), 4) if not pd.isna(r2) else np.nan,
     }
 
 
@@ -314,13 +321,14 @@ def summarize_rolling_validation(rolling_df: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame()
 
     summary = (
-        rolling_df.groupby(["model", "hyperparameters"], as_index=False)[["MAE", "RMSE", "MAPE"]]
+        rolling_df.groupby(["model", "hyperparameters"], as_index=False)[["MAE", "RMSE", "MAPE", "R2"]]
         .mean()
         .rename(
             columns={
                 "MAE": "average_MAE",
                 "RMSE": "average_RMSE",
                 "MAPE": "average_MAPE",
+                "R2": "average_R2",
             }
         )
         .sort_values(by=["average_RMSE", "average_MAE", "model"], ascending=[True, True, True])

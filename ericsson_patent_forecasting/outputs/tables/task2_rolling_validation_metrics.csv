@@ -1,5 +1,5 @@
-model,hyperparameters,average_MAE,average_RMSE,average_MAPE
-Naive Last Value,{},129.5889,153.38343333333333,16.1452
-Linear Regression,{},290.62286666666665,325.6126,41.17273333333333
-Random Forest,"{""max_depth"": 5, ""min_samples_leaf"": 1, ""n_estimators"": 500}",365.9823666666666,393.19546666666673,36.74993333333333
-XGBoost,"{""learning_rate"": 0.01, ""max_depth"": 2, ""n_estimators"": 300}",364.60606666666666,396.45576666666665,35.23146666666667
+model,hyperparameters,average_MAE,average_RMSE,average_MAPE,average_R2
+Naive Last Value,{},129.5889,153.38343333333333,16.1452,0.31256666666666666
+Linear Regression,{},290.62286666666665,325.6126,41.17273333333333,-4.5219000000000005
+Random Forest,"{""max_depth"": 5, ""min_samples_leaf"": 1, ""n_estimators"": 500}",365.9823666666666,393.19546666666673,36.74993333333333,-3.1008333333333336
+XGBoost,"{""learning_rate"": 0.01, ""max_depth"": 2, ""n_estimators"": 300}",364.60606666666666,396.45576666666665,35.23146666666667,-3.2823666666666664

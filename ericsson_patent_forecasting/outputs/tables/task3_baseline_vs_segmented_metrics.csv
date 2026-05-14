@@ -1,13 +1,13 @@
-scheme,model,split,MAE,RMSE,MAPE,n_clusters
-no_segmentation,Random Forest,test,150.3291,183.7173,11.519,1.0
-text_embedding_kmeans,Random Forest,test,181.8299,225.6828,13.9857,6.0
-non_text_kmeans,Random Forest,test,211.0515,260.6574,16.2242,2.0
-text_embedding_kmeans,Linear Regression,test,251.4975,295.0179,18.6289,6.0
-non_text_kmeans,Linear Regression,test,253.9676,297.1905,18.7353,2.0
-no_segmentation,Linear Regression,test,998.3289,1125.2223,72.7782,1.0
-text_embedding_kmeans,Linear Regression,validation,200.3328,238.1541,13.1945,6.0
-non_text_kmeans,Linear Regression,validation,201.5943,251.0946,13.0062,2.0
-no_segmentation,Linear Regression,validation,208.8141,291.2856,13.1657,1.0
-text_embedding_kmeans,Random Forest,validation,704.4464,760.179,47.8085,6.0
-non_text_kmeans,Random Forest,validation,703.4987,768.8935,47.3282,2.0
-no_segmentation,Random Forest,validation,807.9238,863.4854,55.1125,1.0
+scheme,model,split,MAE,RMSE,MAPE,R2,n_clusters
+no_segmentation,Random Forest,test,150.3291,183.7173,11.519,-0.5144,1.0
+text_embedding_kmeans,Random Forest,test,181.8299,225.6828,13.9857,-1.2853,6.0
+non_text_kmeans,Random Forest,test,211.0515,260.6574,16.2242,-2.0485,2.0
+text_embedding_kmeans,Linear Regression,test,251.4975,295.0179,18.6289,-2.9053,6.0
+non_text_kmeans,Linear Regression,test,253.9676,297.1905,18.7353,-2.963,2.0
+no_segmentation,Linear Regression,test,998.3289,1125.2223,72.7782,-55.8106,1.0
+text_embedding_kmeans,Linear Regression,validation,200.3328,238.1541,13.1945,0.2364,6.0
+non_text_kmeans,Linear Regression,validation,201.5943,251.0946,13.0062,0.1511,2.0
+no_segmentation,Linear Regression,validation,208.8141,291.2856,13.1657,-0.1423,1.0
+text_embedding_kmeans,Random Forest,validation,704.4464,760.179,47.8085,-6.7802,6.0
+non_text_kmeans,Random Forest,validation,703.4987,768.8935,47.3282,-6.9596,2.0
+no_segmentation,Random Forest,validation,807.9238,863.4854,55.1125,-9.0385,1.0

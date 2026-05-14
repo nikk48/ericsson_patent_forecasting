@@ -8,7 +8,7 @@ import pandas as pd
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.append(str(PROJECT_ROOT))
 
-from src.forecasting_models import split_time_series_data, train_model_by_name
+from src.forecasting_models import calculate_forecast_metrics, split_time_series_data, train_model_by_name
 
 
 class ForecastingModelTests(unittest.TestCase):
@@ -48,6 +48,13 @@ class ForecastingModelTests(unittest.TestCase):
         )
         predictions = model.predict(self.df[self.feature_columns])
         self.assertListEqual(predictions.tolist(), self.df["lag_1"].astype(float).tolist())
+
+    def test_forecast_metrics_include_r_squared(self):
+        y_true = pd.Series([10, 12, 14, 16])
+        y_pred = pd.Series([10, 12, 14, 16], dtype=float)
+        metrics = calculate_forecast_metrics(y_true, y_pred)
+        self.assertIn("R2", metrics)
+        self.assertEqual(metrics["R2"], 1.0)
 
 
 if __name__ == "__main__":

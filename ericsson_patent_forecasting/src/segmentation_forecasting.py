@@ -600,7 +600,7 @@ def build_task3_baseline_comparison(task2_metrics_df: pd.DataFrame) -> pd.DataFr
     baseline_df = baseline_df[baseline_df["split"].isin(["validation", "test"])].copy()
     baseline_df["scheme"] = "no_segmentation"
     baseline_df["n_clusters"] = 1
-    ordered_columns = ["scheme", "model", "split", "MAE", "RMSE", "MAPE", "n_clusters"]
+    ordered_columns = ["scheme", "model", "split", "MAE", "RMSE", "MAPE", "R2", "n_clusters"]
     return baseline_df[ordered_columns]
 
 

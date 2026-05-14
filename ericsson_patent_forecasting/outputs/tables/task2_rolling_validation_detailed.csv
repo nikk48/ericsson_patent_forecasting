@@ -1,13 +1,13 @@
-model,window_id,train_start_year,train_end_year,validation_start_year,validation_end_year,n_train_years,n_validation_years,hyperparameters,MAE,RMSE,MAPE
-Naive Last Value,1,1978,2000,2001,2005,23,5,{},82.0,97.17,15.2774
-Naive Last Value,2,1978,2005,2006,2010,28,5,{},109.6,149.4376,18.8315
-Naive Last Value,3,1978,2010,2011,2016,33,6,{},197.1667,213.5427,14.3267
-Linear Regression,1,1978,2000,2001,2005,23,5,{},564.9069,577.6346,90.9266
-Linear Regression,2,1978,2005,2006,2010,28,5,{},98.1476,107.9176,19.4259
-Linear Regression,3,1978,2010,2011,2016,33,6,{},208.8141,291.2856,13.1657
-Random Forest,1,1978,2000,2001,2005,23,5,"{""max_depth"": 5, ""min_samples_leaf"": 1, ""n_estimators"": 500}",143.3181,157.1206,23.6618
-Random Forest,2,1978,2005,2006,2010,28,5,"{""max_depth"": 5, ""min_samples_leaf"": 1, ""n_estimators"": 500}",146.7052,158.9804,31.4755
-Random Forest,3,1978,2010,2011,2016,33,6,"{""max_depth"": 5, ""min_samples_leaf"": 1, ""n_estimators"": 500}",807.9238,863.4854,55.1125
-XGBoost,1,1978,2000,2001,2005,23,5,"{""learning_rate"": 0.01, ""max_depth"": 2, ""n_estimators"": 300}",129.2445,150.8329,24.1678
-XGBoost,2,1978,2005,2006,2010,28,5,"{""learning_rate"": 0.01, ""max_depth"": 2, ""n_estimators"": 300}",111.6221,134.7891,23.011
-XGBoost,3,1978,2010,2011,2016,33,6,"{""learning_rate"": 0.01, ""max_depth"": 2, ""n_estimators"": 300}",852.9516,903.7453,58.5156
+model,window_id,train_start_year,train_end_year,validation_start_year,validation_end_year,n_train_years,n_validation_years,hyperparameters,MAE,RMSE,MAPE,R2
+Naive Last Value,1,1978,2000,2001,2005,23,5,{},82.0,97.17,15.2774,0.5787
+Naive Last Value,2,1978,2005,2006,2010,28,5,{},109.6,149.4376,18.8315,-0.0271
+Naive Last Value,3,1978,2010,2011,2016,33,6,{},197.1667,213.5427,14.3267,0.3861
+Linear Regression,1,1978,2000,2001,2005,23,5,{},564.9069,577.6346,90.9266,-13.8877
+Linear Regression,2,1978,2005,2006,2010,28,5,{},98.1476,107.9176,19.4259,0.4643
+Linear Regression,3,1978,2010,2011,2016,33,6,{},208.8141,291.2856,13.1657,-0.1423
+Random Forest,1,1978,2000,2001,2005,23,5,"{""max_depth"": 5, ""min_samples_leaf"": 1, ""n_estimators"": 500}",143.3181,157.1206,23.6618,-0.1015
+Random Forest,2,1978,2005,2006,2010,28,5,"{""max_depth"": 5, ""min_samples_leaf"": 1, ""n_estimators"": 500}",146.7052,158.9804,31.4755,-0.1625
+Random Forest,3,1978,2010,2011,2016,33,6,"{""max_depth"": 5, ""min_samples_leaf"": 1, ""n_estimators"": 500}",807.9238,863.4854,55.1125,-9.0385
+XGBoost,1,1978,2000,2001,2005,23,5,"{""learning_rate"": 0.01, ""max_depth"": 2, ""n_estimators"": 300}",129.2445,150.8329,24.1678,-0.0151
+XGBoost,2,1978,2005,2006,2010,28,5,"{""learning_rate"": 0.01, ""max_depth"": 2, ""n_estimators"": 300}",111.6221,134.7891,23.011,0.1644
+XGBoost,3,1978,2010,2011,2016,33,6,"{""learning_rate"": 0.01, ""max_depth"": 2, ""n_estimators"": 300}",852.9516,903.7453,58.5156,-9.9964

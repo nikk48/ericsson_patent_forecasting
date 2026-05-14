@@ -1,9 +1,9 @@
-model,feature_set,description,n_features,average_rolling_MAE,average_rolling_RMSE,average_rolling_MAPE,test_MAE,test_RMSE,test_MAPE
-Linear Regression,trend_plus_lags,Trend plus lag_1 and lag_2,3,259.44783333333334,283.2583666666667,38.040033333333334,253.6896,296.4332,18.6906
-Linear Regression,trend_lags_growth,Trend plus lag features and lagged growth,4,262.9017,287.91833333333335,38.46183333333334,252.4257,295.1948,18.6042
-Linear Regression,full_feature_set,"Trend, lags, lagged growth, and lagged keyword shares",13,290.62286666666665,325.6126,41.17273333333333,998.3289,1125.2223,72.7782
-Linear Regression,trend_only,Trend only,1,369.7794333333333,401.0474,40.0901,209.5932,242.7195,14.6183
-Random Forest,trend_lags_growth,Trend plus lag features and lagged growth,4,319.5380666666667,355.21586666666667,32.17046666666666,205.3036,255.3282,15.7984
-Random Forest,trend_plus_lags,Trend plus lag_1 and lag_2,3,322.5937666666667,368.2093,31.339,216.0918,270.2433,16.6604
-Random Forest,trend_only,Trend only,1,323.5115666666666,370.1377333333333,31.860566666666667,235.2989,278.6617,17.9503
-Random Forest,full_feature_set,"Trend, lags, lagged growth, and lagged keyword shares",13,365.9823666666666,393.19546666666673,36.74993333333333,150.3291,183.7173,11.519
+model,feature_set,description,n_features,average_rolling_MAE,average_rolling_RMSE,average_rolling_MAPE,average_rolling_R2,test_MAE,test_RMSE,test_MAPE,test_R2
+Linear Regression,trend_plus_lags,Trend plus lag_1 and lag_2,3,259.44783333333334,283.2583666666667,38.040033333333334,-2.9729666666666668,253.6896,296.4332,18.6906,-2.9428
+Linear Regression,trend_lags_growth,Trend plus lag features and lagged growth,4,262.9017,287.91833333333335,38.46183333333334,-3.077366666666667,252.4257,295.1948,18.6042,-2.9099
+Linear Regression,full_feature_set,"Trend, lags, lagged growth, and lagged keyword shares",13,290.62286666666665,325.6126,41.17273333333333,-4.5219000000000005,998.3289,1125.2223,72.7782,-55.8106
+Linear Regression,trend_only,Trend only,1,369.7794333333333,401.0474,40.0901,-3.1311666666666667,209.5932,242.7195,14.6183,-1.6434
+Random Forest,trend_lags_growth,Trend plus lag features and lagged growth,4,319.5380666666667,355.21586666666667,32.17046666666666,-2.3250333333333333,205.3036,255.3282,15.7984,-1.9252
+Random Forest,trend_plus_lags,Trend plus lag_1 and lag_2,3,322.5937666666667,368.2093,31.339,-2.5272666666666663,216.0918,270.2433,16.6604,-2.2769
+Random Forest,trend_only,Trend only,1,323.5115666666666,370.1377333333333,31.860566666666667,-2.5526666666666666,235.2989,278.6617,17.9503,-2.4842
+Random Forest,full_feature_set,"Trend, lags, lagged growth, and lagged keyword shares",13,365.9823666666666,393.19546666666673,36.74993333333333,-3.1008333333333336,150.3291,183.7173,11.519,-0.5144

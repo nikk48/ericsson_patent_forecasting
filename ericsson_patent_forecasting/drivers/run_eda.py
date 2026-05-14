@@ -48,6 +48,12 @@ from src.eda_analysis import (
     plot_segment_trends,
     plot_title_feature_trends,
 )
+from src.time_series_diagnostics import (
+    build_acf_table,
+    build_adf_results,
+    build_pacf_table,
+    plot_correlation_lags,
+)
 
 DATA_PATH = PROJECT_ROOT / "data" / "raw" / "ericsson_patent_rich_dataset.csv"
 PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
@@ -76,6 +82,7 @@ def main() -> None:
     keyword_columns = get_keyword_columns()
     patent_type_columns = get_patent_type_columns()
     annual_counts = create_annual_patent_counts(df_clean)
+    patent_series = annual_counts["total_patents"]
     keyword_trends = create_keyword_trends(df_clean, keyword_columns)
     keyword_shares = create_keyword_shares(annual_counts, keyword_trends, keyword_columns)
     patent_type_trends = create_patent_type_trends(df_clean, patent_type_columns)
@@ -84,6 +91,9 @@ def main() -> None:
     tech_era_shares = create_segment_shares(tech_era_trends)
     patent_type_category_trends = create_segment_trends(df_clean, segment_column="patent_type")
     growth_df = create_growth_rate(annual_counts)
+    adf_results_df = build_adf_results(patent_series, series_name="total_patents")
+    acf_df = build_acf_table(patent_series)
+    pacf_df = build_pacf_table(patent_series)
     title_summary = create_title_feature_summary(df_clean)
     feature_justification = create_feature_justification_table(
         annual_counts=annual_counts,
@@ -93,6 +103,9 @@ def main() -> None:
     )
 
     save_dataframe(annual_counts, str(TABLES_DIR / "annual_patent_counts.csv"))
+    save_dataframe(adf_results_df, str(TABLES_DIR / "task1_adf_results.csv"))
+    save_dataframe(acf_df, str(TABLES_DIR / "task1_acf_values.csv"))
+    save_dataframe(pacf_df, str(TABLES_DIR / "task1_pacf_values.csv"))
     save_dataframe(keyword_trends, str(TABLES_DIR / "keyword_trends.csv"))
     save_dataframe(keyword_shares, str(TABLES_DIR / "keyword_shares.csv"))
     save_dataframe(patent_type_trends, str(TABLES_DIR / "patent_type_trends.csv"))
@@ -107,6 +120,18 @@ def main() -> None:
 
     print("Generating figures...")
     plot_patents_per_year(annual_counts, output_path=str(FIGURES_DIR / "patents_per_year.png"))
+    plot_correlation_lags(
+        acf_df,
+        title="Autocorrelation of Annual Patent Counts",
+        y_label="ACF",
+        output_path=str(FIGURES_DIR / "acf_patents_per_year.png"),
+    )
+    plot_correlation_lags(
+        pacf_df,
+        title="Partial Autocorrelation of Annual Patent Counts",
+        y_label="PACF",
+        output_path=str(FIGURES_DIR / "pacf_patents_per_year.png"),
+    )
     plot_keyword_trends(keyword_trends, keyword_columns=keyword_columns, output_path=str(FIGURES_DIR / "keyword_trends.png"))
     plot_keyword_shares(keyword_shares, output_path=str(FIGURES_DIR / "keyword_shares.png"))
     plot_patent_type_trends(patent_type_trends, output_path=str(FIGURES_DIR / "patent_type_trends.png"))

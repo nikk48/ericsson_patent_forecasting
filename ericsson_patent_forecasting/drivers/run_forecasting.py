@@ -41,6 +41,7 @@ from src.project_config import (
     get_core_settings,
     get_rolling_validation_windows,
 )
+from src.time_series_diagnostics import build_vif_table
 from src.utils import ensure_directory, get_keyword_columns
 
 
@@ -186,9 +187,11 @@ def _build_feature_ablation_table(
                     "average_rolling_MAE": rolling_summary["average_MAE"],
                     "average_rolling_RMSE": rolling_summary["average_RMSE"],
                     "average_rolling_MAPE": rolling_summary["average_MAPE"],
+                    "average_rolling_R2": rolling_summary["average_R2"],
                     "test_MAE": test_metrics["MAE"],
                     "test_RMSE": test_metrics["RMSE"],
                     "test_MAPE": test_metrics["MAPE"],
+                    "test_R2": test_metrics["R2"],
                 }
             )
 
@@ -289,6 +292,8 @@ def main() -> None:
         target_column=TARGET_COLUMN,
         feature_columns=feature_columns,
     )
+    vif_df = build_vif_table(splits["X_train"])
+    save_dataframe(vif_df, str(TABLES_DIR / "task2_vif_results.csv"))
     train_val_df = modelling_df[modelling_df["year"] <= VAL_END_YEAR].copy()
     X_train_val = train_val_df[feature_columns]
     y_train_val = train_val_df[TARGET_COLUMN]

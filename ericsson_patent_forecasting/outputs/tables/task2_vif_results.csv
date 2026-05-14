@@ -1,0 +1,14 @@
+feature,VIF,tolerance
+kw_5g_share_lag_1,inf,0.0
+lag_1,73.8842,0.013535
+lag_2,63.0787,0.015853
+trend,29.7136,0.033655
+kw_network_share_lag_1,11.549,0.086588
+kw_antenna_share_lag_1,9.1236,0.109605
+kw_energy_share_lag_1,5.5087,0.181531
+kw_data_share_lag_1,4.0384,0.247623
+growth_rate_lag_1,3.1529,0.31717
+kw_iot_share_lag_1,2.5707,0.389002
+kw_ai_ml_share_lag_1,2.0897,0.478537
+kw_security_share_lag_1,2.0891,0.478664
+kw_cloud_edge_share_lag_1,1.9462,0.51383

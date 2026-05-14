@@ -233,7 +233,7 @@ def main() -> None:
     if "cluster" in aggregate_segmented_metrics.columns:
         aggregate_segmented_metrics = aggregate_segmented_metrics[aggregate_segmented_metrics["cluster"].isna()].copy()
     aggregate_segmented_metrics = aggregate_segmented_metrics[
-        ["scheme", "model", "split", "MAE", "RMSE", "MAPE", "n_clusters"]
+        ["scheme", "model", "split", "MAE", "RMSE", "MAPE", "R2", "n_clusters"]
     ].copy()
 
     baseline_vs_segmented = pd.concat([baseline_metrics, aggregate_segmented_metrics], ignore_index=True)
